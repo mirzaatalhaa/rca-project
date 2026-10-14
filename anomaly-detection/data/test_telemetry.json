@@ -1,0 +1,7 @@
+[
+  {"timestamp": "2026-10-04T10:00:00Z", "service": "flightwatch-backend", "metric": "latency", "value": 110},
+  {"timestamp": "2026-10-04T10:01:00Z", "service": "flightwatch-backend", "metric": "latency", "value": 120},
+  {"timestamp": "2026-10-04T10:02:00Z", "service": "flightwatch-backend", "metric": "latency", "value": 115},
+  {"timestamp": "2026-10-04T10:03:00Z", "service": "flightwatch-backend", "metric": "latency", "value": 125},
+  {"timestamp": "2026-10-04T10:04:00Z", "service": "flightwatch-backend", "metric": "latency", "value": 3200}
+]

@@ -1,0 +1,28 @@
+# Virtual environment
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environment variables
+.env
+
+# Incident reports artifacts
+reports/*.json
+reports/*.md
+!reports/.gitkeep
+
+# Streamlit
+.streamlit/
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,36 @@
+{
+  "statistical_detector": {
+    "TP": 25,
+    "FP": 1,
+    "TN": 4,
+    "FN": 0,
+    "Precision": 0.9615,
+    "Recall": 1.0,
+    "F1_Score": 0.9804,
+    "Accuracy": 0.9667
+  },
+  "isolation_forest_detector": {
+    "TP": 25,
+    "FP": 1,
+    "TN": 4,
+    "FN": 0,
+    "Precision": 0.9615,
+    "Recall": 1.0,
+    "F1_Score": 0.9804,
+    "Accuracy": 0.9667
+  },
+  "rca_performance": {
+    "total_fault_incidents": 25,
+    "root_cause_accuracy": 1.0,
+    "remediation_recommendation_accuracy": 1.0
+  },
+  "remediation_performance": {
+    "total_remediation_actions": 25,
+    "successful_recoveries": 25,
+    "remediation_success_rate": 1.0
+  },
+  "execution_timing": {
+    "mean_execution_time_seconds": 0.0286,
+    "total_trials_evaluated": 30
+  }
+}
