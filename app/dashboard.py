@@ -19,8 +19,8 @@ from src.config import settings
 from src.incidents.reporter import IncidentReporter
 
 st.set_page_config(
-    page_title="FlightWatch AI Self-Healing System",
-    page_icon="✈️",
+    page_title="AI Self-Healing System",
+    page_icon="",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -51,7 +51,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("✈️ FlightWatch AI Self-Healing System")
+st.title("AI Assisted Self-Healing System")
 st.caption("Autonomous Cloud Observability, Anomaly Detection, LLM Root Cause Analysis & Policy Remediation Engine")
 
 # Sidebar Controls
@@ -80,8 +80,8 @@ auto_remediate = st.sidebar.checkbox("Enable Automated Remediation", value=True)
 
 run_button = st.sidebar.button("🚀 Trigger Scenario & Execute Pipeline", type="primary", use_container_width=True)
 
-# Main Dashboard Tabs
-tab_pipeline, tab_telemetry, tab_history = st.tabs(["⚡ Self-Healing Pipeline", "📈 Telemetry Streams", "📋 Incident History"])
+# Main Pipeline View
+
 
 if "pipeline" not in st.session_state:
     with st.spinner("Initializing models and baseline telemetry..."):
@@ -128,83 +128,56 @@ if run_button:
             status.update(label="Self-Healing Pipeline Completed!", state="complete")
 
 # Display current pipeline execution state
-with tab_pipeline:
-    report = st.session_state.last_report
-    if report is None:
-        st.info("👈 Select a failure scenario from the sidebar and click **'Trigger Scenario & Execute Pipeline'** to begin.")
-    else:
-        # Header banner
-        is_recovered = report.recovery_verification.get("recovered", False)
-        status_color = "green" if is_recovered else "red"
-        st.subheader(f"Incident: `{report.incident_id}` | Scenario: {report.scenario_name}")
-        
-        col_s1, col_s2, col_s3, col_s4 = st.columns(4)
-        with col_s1:
-            st.metric("Primary Metric Flagged", report.anomaly_detection.get("metric"))
-        with col_s2:
-            st.metric("Observed Anomaly Value", report.anomaly_detection.get("observed_value"))
-        with col_s3:
-            st.metric("RCA Confidence", f"{report.rca_diagnosis.get('confidence', 0.0) * 100:.0f}%")
-        with col_s4:
-            st.metric("Verification Status", report.recovery_verification.get("status"))
-
-        st.divider()
-
-        col_left, col_right = st.columns(2)
-        with col_left:
-            st.markdown("### 🔍 1. Anomaly Detection & Context")
-            st.json(report.anomaly_detection)
-
-            st.markdown("### 📋 Evidence Logs & Spans")
-            for ev in report.supporting_evidence:
-                st.markdown(f"- `{ev}`")
-
-        with col_right:
-            st.markdown("### 🧠 2. LLM Root Cause Diagnosis")
-            st.success(f"**Probable Cause:** {report.rca_diagnosis.get('probable_root_cause')}")
-            st.info(f"**Remediation Recommendation:** `{report.rca_diagnosis.get('recommended_remediation')}`")
-            st.write(f"**Rationale:** {report.rca_diagnosis.get('remediation_rationale')}")
-            st.caption(f"Engine: {report.rca_diagnosis.get('llm_provider')} | Mock Mode: {report.rca_diagnosis.get('is_mock_result')}")
-
-            st.markdown("### 🛡️ 3. Remediation & Verification")
-            st.write(f"**Action Executed:** `{report.selected_action}`")
-            st.write(f"**Policy Check:** `{report.action_execution_result.get('policy_check')}`")
-            st.write(f"**Recovery Outcome:** **{report.recovery_verification.get('status')}**")
-            st.write(f"**Verification Details:** {report.recovery_verification.get('details')}")
-
-        st.divider()
-        st.markdown("### 📊 Pre-Remediation vs Post-Remediation Telemetry")
-        metrics_df = pd.DataFrame([
-            {"Metric": m, "Incident (Pre-Action)": report.before_metrics.get(m), "Verified (Post-Action)": report.after_metrics.get(m)}
-            for m in settings.TRACKED_METRICS
-        ])
-        st.dataframe(metrics_df, use_container_width=True)
-
-with tab_telemetry:
-    st.subheader("📈 Real-time Service Telemetry")
-    if st.session_state.last_report:
-        report = st.session_state.last_report
-        chart_data = pd.DataFrame({
-            "Pre-Action (Fault State)": report.before_metrics,
-            "Post-Action (Recovered State)": report.after_metrics
-        })
-        st.bar_chart(chart_data)
-    else:
-        st.info("Run a scenario to view comparative telemetry charts.")
-
-with tab_history:
-    st.subheader("📁 Persisted Incident Reports")
-    reporter: IncidentReporter = st.session_state.reporter
-    report_list = reporter.list_reports()
+report = st.session_state.last_report
+if report is None:
+    st.info("👈 Select a failure scenario from the sidebar and click **'Trigger Scenario & Execute Pipeline'** to begin.")
+else:
+    # Header banner
+    is_recovered = report.recovery_verification.get("recovered", False)
+    status_color = "green" if is_recovered else "red"
+    st.subheader(f"Incident: `{report.incident_id}` | Scenario: {report.scenario_name}")
     
-    if not report_list:
-        st.write("No incident reports found in `reports/` directory.")
-    else:
-        selected_hist_id = st.selectbox("Select Incident Report to Inspect", report_list)
-        if selected_hist_id:
-            hist_report = reporter.load_report(selected_hist_id)
-            if hist_report:
-                st.markdown(f"**Scenario:** `{hist_report.scenario_name}` | **Generated:** `{hist_report.iso_timestamp}`")
-                st.markdown(reporter.render_markdown(hist_report))
-                with st.expander("View Raw JSON Artifact"):
-                    st.json(hist_report.model_dump())
+    col_s1, col_s2, col_s3, col_s4 = st.columns(4)
+    with col_s1:
+        st.metric("Primary Metric Flagged", report.anomaly_detection.get("metric"))
+    with col_s2:
+        st.metric("Observed Anomaly Value", report.anomaly_detection.get("observed_value"))
+    with col_s3:
+        st.metric("RCA Confidence", f"{report.rca_diagnosis.get('confidence', 0.0) * 100:.0f}%")
+    with col_s4:
+        st.metric("Verification Status", report.recovery_verification.get("status"))
+
+    st.divider()
+
+    col_left, col_right = st.columns(2)
+    with col_left:
+        st.markdown("### 🔍 1. Anomaly Detection & Context")
+        st.json(report.anomaly_detection)
+
+        st.markdown("### 📋 Evidence Logs & Spans")
+        for ev in report.supporting_evidence:
+            st.markdown(f"- `{ev}`")
+
+    with col_right:
+        st.markdown("### 🧠 2. LLM Root Cause Diagnosis")
+        st.success(f"**Probable Cause:** {report.rca_diagnosis.get('probable_root_cause')}")
+        st.info(f"**Remediation Recommendation:** `{report.rca_diagnosis.get('recommended_remediation')}`")
+        st.write(f"**Rationale:** {report.rca_diagnosis.get('remediation_rationale')}")
+        st.caption(f"Engine: {report.rca_diagnosis.get('llm_provider')} | Mock Mode: {report.rca_diagnosis.get('is_mock_result')}")
+
+        st.markdown("### 🛡️ 3. Remediation & Verification")
+        st.write(f"**Action Executed:** `{report.selected_action}`")
+        st.write(f"**Policy Check:** `{report.action_execution_result.get('policy_check')}`")
+        st.write(f"**Recovery Outcome:** **{report.recovery_verification.get('status')}**")
+        st.write(f"**Verification Details:** {report.recovery_verification.get('details')}")
+
+    st.divider()
+    st.markdown("### 📊 Pre-Remediation vs Post-Remediation Telemetry")
+    metrics_df = pd.DataFrame([
+        {"Metric": m, "Incident (Pre-Action)": report.before_metrics.get(m), "Verified (Post-Action)": report.after_metrics.get(m)}
+        for m in settings.TRACKED_METRICS
+    ])
+    st.dataframe(metrics_df, use_container_width=True)
+
+# Note: Telemetry Streams and Incident History tabs are hidden for now.
+# To re-enable them later, wrap them in st.tabs or st.expander.
