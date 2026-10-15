@@ -77,13 +77,23 @@ class SelfHealingPipeline:
         pipeline_start = time.time()
         scenario_val = SCENARIOS.get(scenario_key.upper(), scenario_key.lower())
         
-        # Inject fault if scenario is non-normal
+        # 1. Reset simulator state and clear ingestion buffer to prevent stale logs from leaking across scenarios
+        self.simulator.reset()
+        self.buffer.clear()
+
+        # 2. Populate fresh nominal baseline history in buffer
+        current_time = time.time()
+        for i in range(10):
+            t_base = current_time - ((10 - i) * 5.0)
+            pts_base, logs_base, traces_base = self.simulator.generate_point_in_time(t_base)
+            self.buffer.ingest_batch(pts_base, logs_base, traces_base)
+
+        # 3. Inject fault if scenario is non-normal
         self.simulator.inject_fault(scenario_val)
-        ground_truth = self.simulator.get_ground_truth(scenario_val, time.time())
+        ground_truth = self.simulator.get_ground_truth(scenario_val, current_time)
 
         # Simulate incoming stream
         detected_event = None
-        current_time = time.time()
         pre_action_snapshot: Dict[str, float] = {}
 
         # Stream 8 telemetry batches
@@ -96,19 +106,24 @@ class SelfHealingPipeline:
             for p in pts:
                 pre_action_snapshot[p.metric] = p.value
 
-            # Check detection
+            # Check detection across all metrics in batch and pick highest score
             if detected_event is None:
+                candidates = []
                 if detector_choice in ("statistical", "both"):
                     for p in pts:
                         evt = self.stat_detector.detect(p)
                         if evt and evt.is_anomaly:
-                            detected_event = evt
-                            break
+                            candidates.append(evt)
 
-                if detected_event is None and detector_choice in ("ml", "both"):
+                if detector_choice in ("ml", "both"):
                     ml_evt = self.ml_detector.detect_multivariate(pts)
                     if ml_evt and ml_evt.is_anomaly:
-                        detected_event = ml_evt
+                        candidates.append(ml_evt)
+
+                if candidates:
+                    # Pick the most dominant anomaly in the batch
+                    candidates.sort(key=lambda e: e.score, reverse=True)
+                    detected_event = candidates[0]
 
         # If normal operation or no anomaly detected
         if detected_event is None:

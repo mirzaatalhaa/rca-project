@@ -13,6 +13,17 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+import importlib
+import src.config
+import src.orchestrator.pipeline
+import src.rca.analyzer
+import src.telemetry.simulator
+
+importlib.reload(src.config)
+importlib.reload(src.telemetry.simulator)
+importlib.reload(src.rca.analyzer)
+importlib.reload(src.orchestrator.pipeline)
+
 from src.orchestrator.pipeline import SelfHealingPipeline
 from src.telemetry.simulator import SCENARIOS
 from src.config import settings
@@ -92,12 +103,11 @@ if "pipeline" not in st.session_state:
         st.session_state.last_report = None
         st.session_state.last_meta = None
 
-pipeline: SelfHealingPipeline = st.session_state.pipeline
-pipeline.rca_analyzer.provider = llm_provider
-
 if run_button:
-    # Reset loop protection for manual demonstration
-    pipeline.policy_engine.reset_history()
+    # Always instantiate a fresh pipeline to ensure zero cross-scenario log bleed
+    pipeline = SelfHealingPipeline(llm_provider=llm_provider)
+    pipeline.train_baseline(normal_steps=35)
+    st.session_state.pipeline = pipeline
     
     with st.status(f"Executing self-healing workflow for '{selected_scenario}'...", expanded=True) as status:
         st.write("1. 📡 Generating synthetic telemetry & evaluating incoming stream...")
